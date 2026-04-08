@@ -11,9 +11,13 @@ CREATE TABLE reports (
   lat DOUBLE PRECISION NOT NULL,
   lng DOUBLE PRECISION NOT NULL,
   images TEXT[] DEFAULT '{}',
+  upvotes INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Note: If table already exists, run:
+-- ALTER TABLE reports ADD COLUMN upvotes INTEGER DEFAULT 0;
 
 -- 2. Create the status history tracking table
 CREATE TABLE status_history (
@@ -36,9 +40,30 @@ CREATE POLICY "History is viewable by everyone" ON status_history FOR SELECT USI
 
 -- Users can only insert their own reports
 CREATE POLICY "Users can insert their own reports" ON reports FOR INSERT WITH CHECK (auth.uid() = user_id);
--- Trigger/logic limits: Normally an Edge Function or DB Trigger handles updates and history inserts.
--- For this hackathon, we temporarily allow users to update their own reports.
-CREATE POLICY "Users can update own reports" ON reports FOR UPDATE USING (auth.uid() = user_id);
+-- 5. Create the comments table
+CREATE TABLE comments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  report_id UUID REFERENCES reports(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id), -- Optional for guest comments
+  content TEXT NOT NULL,
+  timestamp TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Update RLS for everyone (Public/Anon/Auth) for the demo
+ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
+
+-- Select: Everyone can see comments
+CREATE POLICY "Anyone can view comments" ON comments FOR SELECT USING (true);
+-- Insert: Anyone can post comments for the demo
+CREATE POLICY "Anyone can post comments" ON comments FOR INSERT WITH CHECK (true);
+
+-- FINAL PERMISSIVE POLICIES FOR HACKATHON DEMO:
+-- Ensure reports and history also allow anon updates/inserts if not already set
+DROP POLICY IF EXISTS "Enable update for all" ON reports;
+CREATE POLICY "Enable update for all" ON reports FOR UPDATE USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Enable insert for all" ON status_history;
+CREATE POLICY "Enable insert for all" ON status_history FOR INSERT WITH CHECK (true);
 
 -- Storage (Optional but recommended):
 -- Go to Storage -> Create a new public bucket named "issue_images"

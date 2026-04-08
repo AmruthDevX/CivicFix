@@ -96,14 +96,23 @@ export default function Auth({ onLogin }) {
             </button>
          </form>
 
-         <div className="mt-8 text-center">
-           <button 
-             onClick={() => {setIsLogin(!isLogin); setError(null)}} 
-             className="text-slate-500 hover:text-blue-600 font-semibold transition-colors text-sm"
-           >
-             {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-           </button>
-         </div>
+          <div className="mt-8 text-center flex flex-col gap-4">
+            <button 
+              onClick={() => {setIsLogin(!isLogin); setError(null)}} 
+              className="text-slate-500 hover:text-blue-600 font-semibold transition-colors text-sm"
+            >
+              {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+            </button>
+            
+            <div className="pt-4 border-t border-slate-200">
+               <a 
+                 href="/admin" 
+                 className="text-xs font-bold text-slate-400 hover:text-indigo-600 uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
+               >
+                 <Lock size={12} /> Engineer Portal Access
+               </a>
+            </div>
+          </div>
        </div>
     </div>
   );

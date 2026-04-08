@@ -5,7 +5,7 @@ import { Map, Layers, Shield, User } from 'lucide-react';
 export default function AppLayout() {
   return (
     <div className="w-screen h-screen m-0 p-0 overflow-hidden bg-slate-50 relative selection:bg-blue-100 antialiased flex flex-col">
-      <div className="flex-1 w-full relative z-0">
+      <div className="flex-1 w-full relative z-0 overflow-y-auto bg-slate-50">
         <Outlet />
       </div>
       

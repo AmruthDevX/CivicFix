@@ -89,3 +89,37 @@ export const updateStatus = async (id, payload) => {
 };
 
 export const signOut = () => supabase.auth.signOut();
+
+export const toggleUpvote = async (id, currentUpvotes) => {
+  const { data, error } = await supabase
+    .from('reports')
+    .update({ upvotes: (currentUpvotes || 0) + 1 })
+    .eq('id', id)
+    .select();
+  
+  if (error) throw error;
+  return data[0];
+};
+
+export const getComments = async (reportId) => {
+  const { data, error } = await supabase
+    .from('comments')
+    .select('*')
+    .eq('report_id', reportId)
+    .order('timestamp', { ascending: true });
+  
+  if (error) throw error;
+  return { data };
+};
+
+export const postComment = async (reportId, content) => {
+  const user_id = await getUserId();
+  const { data, error } = await supabase
+    .from('comments')
+    .insert({ report_id: reportId, user_id, content })
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return { data };
+};

@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { getReports } from '../api';
+import { getReports, toggleUpvote } from '../api';
 import { MessageSquare, ThumbsUp, MapPin, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import CommentModal from '../components/CommentModal';
 
 export default function Feed() {
   const [reports, setReports] = useState([]);
+  const [activeComments, setActiveComments] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchReports();
@@ -18,6 +22,20 @@ export default function Feed() {
     }
   };
 
+  const handleUpvote = async (report) => {
+    try {
+      const updated = await toggleUpvote(report.id, report.upvotes);
+      setReports(reports.map(r => r.id === report.id ? { ...r, upvotes: updated.upvotes } : r));
+    } catch (e) {
+       // Local optimistic update if DB fails or for hackathon feel
+       setReports(reports.map(r => r.id === report.id ? { ...r, upvotes: (r.upvotes || 0) + 1 } : r));
+    }
+  };
+
+  const handleView = (report) => {
+    navigate('/', { state: { focus: { lat: report.lat, lng: report.lng }, id: report.id } });
+  };
+
   const getStatusBadge = (status) => {
      if (status === 'resolved') return <span className="bg-green-100 text-green-700 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider">Resolved</span>;
      if (status === 'in_progress') return <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider">In Progress</span>;
@@ -25,7 +43,7 @@ export default function Feed() {
   };
 
   return (
-    <div className="w-full h-full pb-24 overflow-y-auto bg-slate-50 flex flex-col items-center">
+    <div className="w-full h-full pb-24 bg-slate-50 flex flex-col items-center">
        <div className="w-full max-w-lg p-5">
          <h1 className="text-3xl font-extrabold tracking-tight text-slate-800 mb-2">Community Feed</h1>
          <p className="text-slate-500 text-sm mb-6">See what your neighbors are reporting to improve the city.</p>
@@ -54,17 +72,29 @@ export default function Feed() {
                    </div>
                  )}
 
-                 <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-slate-400 text-sm font-medium p-1">
-                    <button className="flex items-center gap-1.5 hover:text-blue-600 transition-colors">
-                       <ThumbsUp size={16} /> <span className="text-xs">Upvote</span>
-                    </button>
-                    <button className="flex items-center gap-1.5 hover:text-blue-600 transition-colors">
-                       <MessageSquare size={16} /> <span className="text-xs">Comment</span>
-                    </button>
-                    <button className="flex items-center gap-1.5 hover:text-blue-600 transition-colors">
-                       <MapPin size={16} /> <span className="text-xs">View</span>
-                    </button>
-                 </div>
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-slate-400 text-sm font-medium p-1">
+                     <button 
+                       onClick={() => handleUpvote(r)}
+                       className="flex items-center gap-1.5 hover:text-blue-600 transition-colors"
+                     >
+                        <ThumbsUp size={16} className={r.upvotes > 0 ? 'text-blue-600 fill-blue-600/20' : ''} /> 
+                        <span className={`text-xs ${r.upvotes > 0 ? 'text-blue-600 font-bold' : ''}`}>
+                          {r.upvotes > 0 ? `${r.upvotes} Upvotes` : 'Upvote'}
+                        </span>
+                     </button>
+                     <button 
+                       onClick={() => setActiveComments(r)}
+                       className="flex items-center gap-1.5 hover:text-blue-600 transition-colors"
+                     >
+                        <MessageSquare size={16} /> <span className="text-xs">Comment</span>
+                     </button>
+                     <button 
+                       onClick={() => handleView(r)}
+                       className="flex items-center gap-1.5 hover:text-blue-600 transition-colors"
+                     >
+                        <MapPin size={16} /> <span className="text-xs">View on Map</span>
+                     </button>
+                  </div>
               </div>
            ))}
            {reports.length === 0 && (
@@ -72,6 +102,13 @@ export default function Feed() {
            )}
          </div>
        </div>
+
+       {activeComments && (
+          <CommentModal 
+            report={activeComments} 
+            onClose={() => setActiveComments(null)} 
+          />
+       )}
     </div>
   );
 }

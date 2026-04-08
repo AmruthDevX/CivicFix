@@ -37,7 +37,7 @@ export default function Admin() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (accessCode === 'admin123') {
+    if (accessCode === import.meta.env.VITE_ENGINEER_ACCESS_CODE || accessCode === 'admin123') {
       setIsAuthorized(true);
     } else {
       alert('Invalid Engineer Access Code');
@@ -76,6 +76,11 @@ export default function Admin() {
                Authenticate
              </button>
            </form>
+           
+           <div className="mt-8 pt-6 border-t border-slate-100 text-center">
+             <p className="text-xs text-slate-400 font-medium">Demo Access Note:</p>
+             <p className="text-sm font-mono font-bold text-indigo-600 mt-1">admin123</p>
+           </div>
          </div>
       </div>
     );

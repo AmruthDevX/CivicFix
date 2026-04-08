@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Plus, Navigation, Key } from 'lucide-react';
 import CivicMap from '../components/CivicMap';
 import ReportModal from '../components/ReportModal';
@@ -9,11 +10,16 @@ export default function Home() {
   const [isReporting, setIsReporting] = useState(false);
   const [userLoc, setUserLoc] = useState(null);
   const [locationError, setLocationError] = useState('');
+  const location = useLocation();
 
   useEffect(() => {
     fetchReports();
-    // Auto-fetch location on load if possible
-    if (navigator.geolocation) {
+    
+    // Check if we came from feed with a focus request
+    if (location.state?.focus) {
+      setUserLoc(location.state.focus);
+    } else if (navigator.geolocation) {
+       // Only auto-locate if not focused on a specific issue
       navigator.geolocation.getCurrentPosition(
         (pos) => { setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocationError(''); },
         (err) => { console.warn('Location denied'); setLocationError('Location access blocked by browser.'); }

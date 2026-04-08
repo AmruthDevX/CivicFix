@@ -31,18 +31,17 @@ function App() {
     return <div className="w-screen h-screen flex items-center justify-center bg-slate-50">Loading...</div>;
   }
 
-  if (!session) {
-    return <Auth onLogin={setSession} />;
-  }
-
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<AppLayout />}>
+        {/* Public Routes accessible without user login */}
+        <Route path="/admin" element={<Admin />} />
+        
+        {/* Authenticated Routes */}
+        <Route element={session ? <AppLayout /> : <Auth onLogin={setSession} />}>
           <Route path="/" element={<Home session={session} />} />
           <Route path="/feed" element={<Feed />} />
           <Route path="/profile" element={<Profile session={session} />} />
-          <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
