@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Camera, X, CheckCircle, MapPin, ScanText, AlertTriangle } from 'lucide-react';
-import { submitReport } from '../api';
+import { submitReport, getNearbyReports } from '../api';
 import { verifyIncidentReport } from '../lib/ai';
+import { calculateVisualHash, getHammingDistance } from '../lib/VisualUtils';
+import { Camera, X, CheckCircle, MapPin, ScanText, AlertTriangle, Search } from 'lucide-react';
 
 export default function ReportModal({ onClose, onSuccess, initialLoc }) {
   const [step, setStep] = useState(1);
@@ -23,7 +24,32 @@ export default function ReportModal({ onClose, onSuccess, initialLoc }) {
     setIsSubmitting(true);
     setIsAiChecking(true);
     setAiRejectionReason(null);
+    
     try {
+      // 1. Check for visual duplicates nearby
+      if (imageFiles.length > 0) {
+        setAiRejectionReason(null);
+        const currentHash = await calculateVisualHash(imageFiles[0]);
+        const nearby = await getNearbyReports(formData.lat, formData.lng);
+        
+        const duplicate = nearby.find(r => {
+          if (!r.visual_hash) return false;
+          const distance = getHammingDistance(currentHash, r.visual_hash);
+          return distance < 10; // Threshold for similarity
+        });
+
+        if (duplicate) {
+          setAiRejectionReason(`This incident has already been reported nearby (Ticket: ${duplicate.ticket_id}). Please check the feed to follow its progress!`);
+          setIsSubmitting(false);
+          setIsAiChecking(false);
+          return;
+        }
+        
+        // Add hash to form data for storage
+        formData.visual_hash = currentHash;
+      }
+
+      // 2. AI Triage check
       if (imageFiles.length > 0) {
         try {
           const aiResult = await verifyIncidentReport(imageFiles[0], formData);
@@ -42,7 +68,9 @@ export default function ReportModal({ onClose, onSuccess, initialLoc }) {
       setIsAiChecking(false);
 
       const data = new FormData();
-      Object.keys(formData).forEach(k => data.append(k, formData[k]));
+      Object.keys(formData).forEach(k => {
+        if (formData[k] !== undefined) data.append(k, formData[k]);
+      });
       imageFiles.forEach(f => data.append('images', f));
 
       const res = await submitReport(data);

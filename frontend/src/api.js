@@ -54,7 +54,8 @@ export const submitReport = async (formData) => {
      status: 'reported',
      lat: parseFloat(formData.get('lat')),
      lng: parseFloat(formData.get('lng')),
-     images: imageUrls
+     images: imageUrls,
+     visual_hash: formData.get('visual_hash')
   };
 
   const { data: insertedReport, error: insertError } = await supabase.from('reports').insert(reportData).select().single();
@@ -122,4 +123,21 @@ export const postComment = async (reportId, content) => {
   
   if (error) throw error;
   return { data };
+};
+
+export const getNearbyReports = async (lat, lng, radiusKm = 0.5) => {
+  // Rough bounding box for proximity search
+  const latDelta = radiusKm / 111;
+  const lngDelta = radiusKm / (111 * Math.cos(lat * (Math.PI / 180)));
+
+  const { data, error } = await supabase
+    .from('reports')
+    .select('id, visual_hash, ticket_id')
+    .gte('lat', lat - latDelta)
+    .lte('lat', lat + latDelta)
+    .gte('lng', lng - lngDelta)
+    .lte('lng', lng + lngDelta);
+
+  if (error) throw error;
+  return data;
 };

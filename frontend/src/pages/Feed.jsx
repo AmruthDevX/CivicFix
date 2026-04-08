@@ -3,6 +3,8 @@ import { getReports, toggleUpvote } from '../api';
 import { MessageSquare, ThumbsUp, MapPin, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import CommentModal from '../components/CommentModal';
+import { exportReportPDF, generateDCLetter } from '../lib/PDFUtils';
+import { FileText, ShieldAlert } from 'lucide-react';
 
 export default function Feed() {
   const [reports, setReports] = useState([]);
@@ -34,6 +36,11 @@ export default function Feed() {
 
   const handleView = (report) => {
     navigate('/', { state: { focus: { lat: report.lat, lng: report.lng }, id: report.id } });
+  };
+
+  const isDelayed = (createdAt) => {
+    const twoDaysInMs = 2 * 24 * 60 * 60 * 1000;
+    return (Date.now() - new Date(createdAt).getTime()) > twoDaysInMs;
   };
 
   const getStatusBadge = (status) => {
@@ -72,29 +79,50 @@ export default function Feed() {
                    </div>
                  )}
 
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-slate-400 text-sm font-medium p-1">
-                     <button 
-                       onClick={() => handleUpvote(r)}
-                       className="flex items-center gap-1.5 hover:text-blue-600 transition-colors"
-                     >
-                        <ThumbsUp size={16} className={r.upvotes > 0 ? 'text-blue-600 fill-blue-600/20' : ''} /> 
-                        <span className={`text-xs ${r.upvotes > 0 ? 'text-blue-600 font-bold' : ''}`}>
-                          {r.upvotes > 0 ? `${r.upvotes} Upvotes` : 'Upvote'}
-                        </span>
-                     </button>
-                     <button 
-                       onClick={() => setActiveComments(r)}
-                       className="flex items-center gap-1.5 hover:text-blue-600 transition-colors"
-                     >
-                        <MessageSquare size={16} /> <span className="text-xs">Comment</span>
-                     </button>
-                     <button 
-                       onClick={() => handleView(r)}
-                       className="flex items-center gap-1.5 hover:text-blue-600 transition-colors"
-                     >
-                        <MapPin size={16} /> <span className="text-xs">View on Map</span>
-                     </button>
-                  </div>
+                   <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-slate-400 text-sm font-medium p-1">
+                      <div className="flex gap-4">
+                        <button 
+                          onClick={() => handleUpvote(r)}
+                          className="flex items-center gap-1.5 hover:text-blue-600 transition-colors"
+                        >
+                           <ThumbsUp size={16} className={r.upvotes > 0 ? 'text-blue-600 fill-blue-600/20' : ''} /> 
+                           <span className={`text-xs ${r.upvotes > 0 ? 'text-blue-600 font-bold' : ''}`}>
+                             {r.upvotes > 0 ? `${r.upvotes}` : 'Upvote'}
+                           </span>
+                        </button>
+                        <button 
+                          onClick={() => setActiveComments(r)}
+                          className="flex items-center gap-1.5 hover:text-blue-600 transition-colors"
+                        >
+                           <MessageSquare size={16} /> <span className="text-xs">Comment</span>
+                        </button>
+                        <button 
+                          onClick={() => exportReportPDF(r)}
+                          className="flex items-center gap-1.5 hover:text-blue-600 transition-colors"
+                          title="Download PDF Report"
+                        >
+                           <FileText size={16} /> <span className="text-xs">PDF</span>
+                        </button>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                         {r.status !== 'resolved' && isDelayed(r.created_at) && (
+                           <button 
+                             onClick={() => generateDCLetter(r)}
+                             className="flex items-center gap-1.5 text-amber-600 bg-amber-50 px-3 py-1 rounded-full hover:bg-amber-100 transition-all border border-amber-200 group relative"
+                           >
+                              <ShieldAlert size={14} className="group-hover:animate-pulse" /> 
+                              <span className="text-[10px] font-bold uppercase tracking-tight">Escalate to DC</span>
+                           </button>
+                         )}
+                         <button 
+                           onClick={() => handleView(r)}
+                           className="flex items-center gap-1.5 hover:text-blue-600 transition-colors bg-slate-100 px-3 py-1 rounded-full"
+                         >
+                            <MapPin size={14} /> <span className="text-[10px] font-bold uppercase">Map</span>
+                         </button>
+                      </div>
+                   </div>
               </div>
            ))}
            {reports.length === 0 && (

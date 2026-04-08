@@ -12,9 +12,17 @@ CREATE TABLE reports (
   lng DOUBLE PRECISION NOT NULL,
   images TEXT[] DEFAULT '{}',
   upvotes INTEGER DEFAULT 0,
+  visual_hash TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Optimization: Index location for proximity searches
+CREATE INDEX IF NOT EXISTS idx_reports_location ON reports (lat, lng);
+
+-- Note: If table already exists, run:
+-- ALTER TABLE reports ADD COLUMN visual_hash TEXT;
+-- CREATE INDEX idx_reports_location ON reports (lat, lng);
 
 -- Note: If table already exists, run:
 -- ALTER TABLE reports ADD COLUMN upvotes INTEGER DEFAULT 0;
