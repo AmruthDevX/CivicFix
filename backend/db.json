@@ -1,0 +1,48 @@
+{
+  "reports": [
+    {
+      "id": "c0fd5696-095d-4d35-b724-34bb5bbfa734",
+      "ticket_id": "TIC-4OETY0",
+      "category": "pothole",
+      "description": "Huge pothole on main street",
+      "status": "reported",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "city": "New York",
+      "state": "NY",
+      "images": [],
+      "status_history": [
+        {
+          "status": "reported",
+          "actor": "citizen",
+          "note": "Report created",
+          "timestamp": "2026-04-08T05:55:02.319Z"
+        }
+      ],
+      "created_at": "2026-04-08T05:55:02.319Z"
+    },
+    {
+      "id": "faaa271d-cc51-42a5-95f6-4013a1317387",
+      "ticket_id": "TIC-NY40YL",
+      "category": "pothole",
+      "description": "big pothole\r\n",
+      "status": "reported",
+      "lat": 14.44459062638551,
+      "lng": 75.9025257866991,
+      "city": "Unknown",
+      "state": "Unknown",
+      "images": [
+        "/uploads/1775628309693-Screenshot 2026-04-08 111134.png"
+      ],
+      "status_history": [
+        {
+          "status": "reported",
+          "actor": "citizen",
+          "note": "Report created",
+          "timestamp": "2026-04-08T06:05:09.710Z"
+        }
+      ],
+      "created_at": "2026-04-08T06:05:09.710Z"
+    }
+  ]
+}
